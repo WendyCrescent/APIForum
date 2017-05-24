@@ -23,10 +23,20 @@ class TopicController extends Controller
           ->toArray();
   }
 
+  public function show(Topic $topic)
+  {
+    return fractal()
+          ->item($topic)
+          ->parseIncludes(['user', 'posts', 'posts.user'])
+          ->transformWith(new TopicTransformer)
+          ->toArray();
+  }
+
   public function store(StoreTopicRequest $request)
   {
     $topic = new Topic;
     $topic->title = $request->title;
+    $topic->slug = str_slug($request->title);
     $topic->user()->associate($request->user());
 
     $post = new Post;

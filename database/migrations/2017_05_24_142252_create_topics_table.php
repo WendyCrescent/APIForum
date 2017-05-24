@@ -17,6 +17,7 @@ class CreateTopicsTable extends Migration
             $table->increments('id');
             $table->integer('user_id')->unsigned()->index();
             $table->string('title');
+            $table->string('slug')->unique();
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
