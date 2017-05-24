@@ -5,27 +5,41 @@ namespace App\Http\Controllers;
 use App\Models\{Topic,Post};
 use App\Transformers\TopicTransformer;
 use App\Http\Requests\StoreTopicRequest;
+use \League\Fractal\Pagination\IlluminatePaginatorAdapter;
 use Illuminate\Http\Request;
 
 class TopicController extends Controller
 {
-    public function store(StoreTopicRequest $request)
-    {
-      $topic = new Topic;
-      $topic->title = $request->title;
-      $topic->user()->associate($request->user());
+  public function index()
+  {
+    $topics = Topic::latestFirst()->paginate(10);
+    $topicsCollection = $topics->getCollection();
 
-      $post = new Post;
-      $post->body = $request->body;
-      $post->user()->associate($request->user());
+    return fractal()
+          ->collection($topicsCollection)
+          ->parseIncludes(['user'])
+          ->transformWith(new TopicTransformer)
+          ->paginateWith(new IlluminatePaginatorAdapter($topics))
+          ->toArray();
+  }
 
-      $topic->save();
-      $topic->posts()->save($post);
+  public function store(StoreTopicRequest $request)
+  {
+    $topic = new Topic;
+    $topic->title = $request->title;
+    $topic->user()->associate($request->user());
 
-      return fractal()
-              ->item($topic)
-              ->parseIncludes(['user'])
-              ->transformWith(new TopicTransformer)
-              ->toArray();
-    }
+    $post = new Post;
+    $post->body = $request->body;
+    $post->user()->associate($request->user());
+
+    $topic->save();
+    $topic->posts()->save($post);
+
+    return fractal()
+          ->item($topic)
+          ->parseIncludes(['user'])
+          ->transformWith(new TopicTransformer)
+          ->toArray();
+  }
 }
